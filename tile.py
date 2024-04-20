@@ -95,5 +95,5 @@ class Tile:
         return score
 
     # A method for updating the color of this tile based on the number on it
-    def update_color(self, color_of_tiles):
+    def update_color(self):
         pass
