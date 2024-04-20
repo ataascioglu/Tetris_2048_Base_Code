@@ -83,8 +83,9 @@ def start():
             game_over = grid.update_grid(tiles, pos)
             # end the main game loop if the game is over
 
-            lines_cleared = grid.remove_full_lines()
-
+            completed_rows = grid.check_completed_rows()
+            if completed_rows:
+                grid.delete_completed_rows(completed_rows)
             if game_over:
                 break
             # create the next tetromino to enter the game grid

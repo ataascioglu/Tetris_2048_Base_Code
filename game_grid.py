@@ -156,34 +156,19 @@ class GameGrid:
         # return the value of the game_over flag
         return self.game_over
 
+    def check_completed_rows(self):
+        completed_rows = []
+        for i in range(self.grid_height):
+            if all(self.tile_matrix[i]):
+                completed_rows.append(i)
+        return completed_rows
 
-
-
-
-    def remove_full_lines(self):
-        # Identify full rows
-        full_rows = np.all(self.tile_matrix != None, axis=1)
-        full_indices = np.where(full_rows)[0]  # Get indices of full rows
-
-        # Check if any full lines are detected
-        if len(full_indices) > 0:
-            # Create a new grid excluding full rows
-            non_full_rows = self.tile_matrix[~full_rows]
-
-            # Calculate number of new empty rows to add at the top
-            num_new_rows = self.grid_height - non_full_rows.shape[0]
-
-            # Create new empty rows
-            new_rows = np.full((num_new_rows, self.grid_width), None)
-
-            # Combine new empty rows with the non-full rows to form the updated grid
-            self.tile_matrix = np.vstack((non_full_rows, new_rows))
-
-            # Shift down tiles above the cleared lines
-            for i in range(full_indices[0] - 1, -1, -1):
-                for j in range(self.grid_width):
-                    if self.tile_matrix[i, j] is not None:
-                        self.tile_matrix[i + num_new_rows, j] = self.tile_matrix[i, j]
-                        self.tile_matrix[i, j] = None
-
-        return len(full_indices)  # Return the number of lines cleared
+    def delete_completed_rows(self, completed_rows):
+        # Sort the completed rows in descending order to start deleting from the bottom
+        completed_rows.sort(reverse=True)
+        for row in completed_rows:
+            # Delete the completed row by shifting down all rows above it
+            for r in range(row, self.grid_height - 1):
+                self.tile_matrix[r] = self.tile_matrix[r + 1]
+            # Fill the top row with None to represent an empty row
+            self.tile_matrix[self.grid_height - 1] = np.full((self.grid_width,), None)

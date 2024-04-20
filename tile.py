@@ -1,4 +1,5 @@
 import lib.stddraw as stddraw  # used for drawing the tiles to display them
+from constants import BACKGROUND_COLOR, FOREGROUND_COLOR # used for coloring the tiles
 from lib.color import Color  # used for coloring the tiles
 import random  # used for randomly choosing the number on the tile
 
@@ -16,18 +17,16 @@ class Tile:
     def __init__(self):
         # set the number on this tile
         self.number = random.choice([2, 4])  # randomly choose 2 or 4
-        # set the colors of this tile
-        self.background_color = Color(151, 178, 199)  # background (tile) color
-        self.foreground_color = Color(0, 100, 200)  # foreground (number) color
-        self.box_color = Color(132, 122, 113)  # box (boundary) color
+        self.update_color(self.number)
 
     # A method for drawing this tile at a given position with a given length
     def draw(self, position, length=1):  # length defaults to 1
         # draw the tile as a filled square
         stddraw.setPenColor(self.background_color)
         stddraw.filledSquare(position.x, position.y, length / 2)
+
+        stddraw.setPenColor(Color(0, 0, 0))  # Choose a contrasting color for the border
         # draw the bounding box around the tile as a square
-        stddraw.setPenColor(self.box_color)
         stddraw.setPenRadius(Tile.boundary_thickness)
         stddraw.square(position.x, position.y, length / 2)
         stddraw.setPenRadius()  # reset the pen radius to its default value
@@ -49,7 +48,7 @@ class Tile:
             tile.number = None
 
             # Update the color of the current tile
-            self.update_color()
+            self.update_color(self.number)
             # return True to indicate that the tiles were matched
             return self.number
         # return False to indicate that the tiles were not matched
@@ -95,5 +94,6 @@ class Tile:
         return score
 
     # A method for updating the color of this tile based on the number on it
-    def update_color(self):
-        pass
+    def update_color(self, number):
+        self.background_color = BACKGROUND_COLOR[number]
+        self.foreground_color = FOREGROUND_COLOR[number]
