@@ -36,7 +36,6 @@ class GameGrid:
         # thickness values used for the grid lines and the grid boundaries
         self.line_thickness = 0.002
         self.box_thickness = 10 * self.line_thickness
-        self.info_line_thickness = 2 * self.line_thickness
         # the score of the game starts from 0
         self.score = 0
 
@@ -55,8 +54,6 @@ class GameGrid:
         # show the resulting drawing with a pause duration = 250 ms
         stddraw.show(250)
         self.score = Tile.merge_tiles(self.tile_matrix, self.score)
-        # draw a box around the game grid
-        self.draw_boundaries()
 
     def display_score(self):
         stddraw.setFontSize(28)

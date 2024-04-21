@@ -55,13 +55,36 @@ def start():
                 # move the active tetromino down by one
                 # (soft drop: causes the tetromino to fall down faster)
                 current_tetromino.move(key_typed, grid)
-            # clear the queue of the pressed keys for a smoother interaction
+            # if the spacebar key has been pressed (hard drop)
+            elif key_typed == "space":
+                # move the active tetromino all the way down
+                while current_tetromino.move("down", grid):
+                    pass
+                # lock the tetromino in place
+                success = current_tetromino.move("down", grid)
+                if not success:
+                    # get the tile matrix of the tetromino without empty rows and columns
+                    # and the position of the bottom left cell in this matrix
+                    tiles, pos = current_tetromino.get_min_bounded_tile_matrix(True)
+                    # update the game grid by locking the tiles of the landed tetromino
+                    game_over = grid.update_grid(tiles, pos)
+                    # end the main game loop if the game is over
 
+                    completed_rows = grid.check_completed_rows()
+                    if completed_rows:
+                        grid.delete_completed_rows(completed_rows)
+                    if game_over:
+                        break
+                    # create the next tetromino to enter the game grid
+                    # by using the create_tetromino function defined below
+                    current_tetromino = create_tetromino()
+                    grid.current_tetromino = current_tetromino
+            # if the up arrow key has been pressed
             elif key_typed == "up":
                 current_tetromino.rotate_clockwise()
                 if not current_tetromino.is_valid_position(grid):
                     current_tetromino.rotate_counter_clockwise()
-
+            # if the 'z' key has been pressed
             elif key_typed == "z":
                 current_tetromino.rotate_counter_clockwise()
                 if not current_tetromino.is_valid_position(grid):
