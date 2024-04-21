@@ -18,27 +18,24 @@ def start():
     # set the dimensions of the game grid
     grid_h, grid_w = 20, 12
     # set the size of the drawing canvas (the displayed window)
-    canvas_h, canvas_w = 40 * grid_h, 40 * grid_w
+    canvas_h, canvas_w = 40 * grid_h, 60 * grid_w
     stddraw.setCanvasSize(canvas_w, canvas_h)
     # set the scale of the coordinate system for the drawing canvas
-    stddraw.setXscale(-0.5, grid_w - 0.5)
+    stddraw.setXscale(-0.5, grid_w + 3.5)
     stddraw.setYscale(-0.5, grid_h - 0.5)
 
     # set the game grid dimension values stored and used in the Tetromino class
     Tetromino.grid_height = grid_h
     Tetromino.grid_width = grid_w
     # create the game grid
-    grid = GameGrid(grid_h, grid_w, 5)
-    info_w = 5
-    grid.info_width = info_w
-    # create the first tetromino to enter the game grid
-    # by using the create_tetromino function defined below
+    grid = GameGrid(grid_h, grid_w)
     current_tetromino = create_tetromino()
     grid.current_tetromino = current_tetromino
 
+
     # display a simple menu before opening the game
     # by using the display_game_menu function defined below
-    display_game_menu(grid_h, grid_w)
+    display_game_menu(grid_h, grid_w + 4)
 
     # the main game loop
     while True:

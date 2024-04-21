@@ -1,8 +1,13 @@
+import copy
+
 import lib.stddraw as stddraw  # used for displaying the game grid
 from lib.color import Color  # used for coloring the game grid
 from point import Point  # used for tile positions
 import numpy as np  # fundamental Python module for scientific computing
+
+from tetromino import Tetromino
 from tile import Tile
+from random import choice
 
 
 # A class for modeling the game grid
@@ -12,18 +17,15 @@ def get_next_display_dict(grid_width):
 
 class GameGrid:
     # A constructor for creating the game grid based on the given arguments
-    def __init__(self, grid_h, grid_w, info_w, next_tetromino=None):
+    def __init__(self, grid_h, grid_w):
         # set the dimensions of the game grid as the given arguments
         self.grid_height = grid_h
         self.grid_width = grid_w
-        self.info_width = info_w
-
         # create a tile matrix to store the tiles locked on the game grid
         self.tile_matrix = np.full((grid_h, grid_w), None)
         # create the tetromino that is currently being moved on the game grid
         self.current_tetromino = None
         # create the tetromino that will enter the game grid next
-        self.next_tetromino = next_tetromino
         # the game_over flag shows whether the game is over or not
         self.game_over = False
         # set the color used for the empty grid cells
@@ -53,10 +55,16 @@ class GameGrid:
         # show the resulting drawing with a pause duration = 250 ms
         stddraw.show(250)
         self.score = Tile.merge_tiles(self.tile_matrix, self.score)
-        # draw the score and the next tetromino
-        self.draw_info()
         # draw a box around the game grid
         self.draw_boundaries()
+
+    def display_score(self):
+        stddraw.setFontSize(28)
+        stddraw.setPenColor(Color(69, 60, 51))
+        stddraw.text(self.grid_width + 2, self.grid_height // 2, "Score")
+        stddraw.setFontFamily("Arial")
+        stddraw.text(self.grid_width + 2, self.grid_height // 2 - 0.8, str(self.score))
+        stddraw.setFontFamily("Arial")
 
     # A method for drawing the cells and the lines of the game grid
     def draw_grid(self):
@@ -78,29 +86,8 @@ class GameGrid:
         for y in np.arange(start_y + 1, end_y, 1):  # horizontal inner lines
             stddraw.line(start_x, y, end_x, y)
         stddraw.setPenRadius()  # reset the pen radius to its default value
+        self.display_score()
 
-    def draw_info(self, cp=None):
-        # info grid settings
-        stddraw.setPenColor(Color(167, 160, 151))
-        stddraw.filledRectangle(self.grid_width - 0.5, -0.5, self.info_width, self.grid_height)
-        info_center_x_scale = (self.grid_width + self.info_width / 2) - 0.5
-        info_score_y_scale = (self.grid_height - 2)
-        # draw the score
-        stddraw.setPenColor(Color(255, 255, 255))
-        stddraw.setFontFamily("Arial")
-        stddraw.setFontSize(25)
-        stddraw.boldText(info_center_x_scale, info_score_y_scale, "Score")
-        stddraw.boldText(info_center_x_scale, info_score_y_scale - 0.75, str(self.score))
-        # draw the next tetromino
-        stddraw.boldText(info_center_x_scale, 5, "Next")
-        if self.next_tetromino is not None:
-            next_display = cp.deepcopy(self.next_tetromino)
-            next_display.bottom_left_cell = Point()
-            tile_next_display = get_next_display_dict(self.grid_width)
-            next_display.bottom_left_cell.x = tile_next_display[next_display.type]['x']
-            next_display.bottom_left_cell.y = tile_next_display[next_display.type]['y']
-            next_display.draw()
-   
     # A method for drawing the boundaries around the game grid
     def draw_boundaries(self):
         # draw a bounding box around the game grid as a rectangle
@@ -172,3 +159,4 @@ class GameGrid:
                 self.tile_matrix[r] = self.tile_matrix[r + 1]
             # Fill the top row with None to represent an empty row
             self.tile_matrix[self.grid_height - 1] = np.full((self.grid_width,), None)
+

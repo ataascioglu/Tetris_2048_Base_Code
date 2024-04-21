@@ -25,7 +25,7 @@ class Tile:
         stddraw.setPenColor(self.background_color)
         stddraw.filledSquare(position.x, position.y, length / 2)
 
-        stddraw.setPenColor(Color(0, 0, 0))  # Choose a contrasting color for the border
+        stddraw.setPenColor(Color(128, 128, 128))  # Choose a contrasting color for the border
         # draw the bounding box around the tile as a square
         stddraw.setPenRadius(Tile.boundary_thickness)
         stddraw.square(position.x, position.y, length / 2)
