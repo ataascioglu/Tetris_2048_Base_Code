@@ -40,7 +40,7 @@ class GameGrid:
         self.score = 0
 
     # A method for displaying the game grid
-    def display(self):
+    def display(self, next_tetromino):
         # clear the background to empty_cell_color
         stddraw.clear(self.empty_cell_color)
         # draw the game grid
@@ -52,16 +52,21 @@ class GameGrid:
         # draw a box around the game grid
         self.draw_boundaries()
         # show the resulting drawing with a pause duration = 250 ms
-        stddraw.show(250)
         self.score = Tile.merge_tiles(self.tile_matrix, self.score)
+
+        self.remove_floating_tetrominos()
+
+        self.display_next_tetromino(next_tetromino)
 
     def display_score(self):
         stddraw.setFontSize(28)
         stddraw.setPenColor(Color(69, 60, 51))
-        stddraw.text(self.grid_width + 2, self.grid_height // 2, "Score")
+        stddraw.text(self.grid_width + 1.5, self.grid_height - 17.5, "Score")
         stddraw.setFontFamily("Arial")
-        stddraw.text(self.grid_width + 2, self.grid_height // 2 - 0.8, str(self.score))
+        stddraw.text(self.grid_width + 1.5, self.grid_height - 18 - 0.8, str(self.score))
         stddraw.setFontFamily("Arial")
+        stddraw.setFontSize(22)
+        stddraw.text(self.grid_width + 1.60, self.grid_height - 2, "Next Tetromino")
 
     # A method for drawing the cells and the lines of the game grid
     def draw_grid(self):
@@ -140,20 +145,106 @@ class GameGrid:
         # return the value of the game_over flag
         return self.game_over
 
-    def check_completed_rows(self):
-        completed_rows = []
-        for i in range(self.grid_height):
-            if all(self.tile_matrix[i]):
-                completed_rows.append(i)
-        return completed_rows
+    # A method for removing the full rows from the game grid and updating the
+    # game grid by shifting down the tiles above the removed rows
+    def remove_full_rows(self):
+        # the list of full rows to be removed from the game grid
+        full_rows = []
+        # check each row of the game grid for being full
+        for row in range(self.grid_height):
+            # check if the current row is full
+            if self.is_full(row):
+                full_rows.append(row)
+        # remove the full rows from the game grid
+        for row in reversed(full_rows):
+            self.remove_row(row)
+        # return the number of full rows removed from the game grid
+        return len(full_rows)
 
-    def delete_completed_rows(self, completed_rows):
-        # Sort the completed rows in descending order to start deleting from the bottom
-        completed_rows.sort(reverse=True)
-        for row in completed_rows:
-            # Delete the completed row by shifting down all rows above it
-            for r in range(row, self.grid_height - 1):
-                self.tile_matrix[r] = self.tile_matrix[r + 1]
-            # Fill the top row with None to represent an empty row
-            self.tile_matrix[self.grid_height - 1] = np.full((self.grid_width,), None)
+    # A method for checking whether the given row is full or not
+    def is_full(self, row):
+        # check if there is any empty cell in the given row
+        for col in range(self.grid_width):
+            if self.tile_matrix[row][col] is None:
+                return False
+        return True
 
+    # A method for removing the given row from the game grid
+    def remove_row(self, row):
+
+        self.calculate_score(row)
+        # remove the given row from the game grid
+        for r in range(row, self.grid_height - 1):
+            for col in range(self.grid_width):
+                self.tile_matrix[r][col] = self.tile_matrix[r + 1][col]
+        for col in range(self.grid_width):
+            self.tile_matrix[self.grid_height - 1][col] = None
+
+    # A method for calculating the score when deleting a row
+    def calculate_score(self, row):
+        # iterate over the tiles in the row
+        for col in range(self.grid_width):
+            tile = self.tile_matrix[row][col]
+            if tile is not None:
+                # add the number in the tile to the score
+                self.score += tile.number
+
+    def reset(self):
+        # Set all tiles in the grid to None
+        for row in range(self.grid_height):
+            for col in range(self.grid_width):
+                self.tile_matrix[row][col] = None
+
+        # Reset the score
+        self.score = 0
+
+        self.current_tetromino = None
+
+
+    def display_next_tetromino(self, next_tetromino):
+        # Define the position where the next Tetromino will be displayed
+        display_position = Point(self.grid_width + 0.75, self.grid_height - 4)
+
+        # Iterate over the tiles of the next Tetromino
+        for row in range(next_tetromino.tile_matrix.shape[0]):
+            for col in range(next_tetromino.tile_matrix.shape[1]):
+                tile = next_tetromino.tile_matrix[row, col]
+                if tile is not None:
+                    # Calculate the position of the tile on the game grid
+                    pos = Point()
+                    pos.x = display_position.x + col
+                    pos.y = display_position.y - row
+                    # Draw the tile
+                    tile.draw(pos)
+
+    def remove_floating_tetrominos(self):
+        temp_score = 0
+        # Create a set to store the positions of all connected cells
+        connected = set()
+        # Perform a DFS from each cell at the bottom of the grid
+        for col in range(self.grid_width):
+            if self.tile_matrix[0][col] is not None:
+                self.dfs(0, col, connected)
+        # Iterate over the entire grid
+        for row in range(self.grid_height):
+            for col in range(self.grid_width):
+                # If a cell is not connected, it's floating
+                if self.tile_matrix[row][col] is not None and (row, col) not in connected:
+                    temp_score += self.tile_matrix[row][col].number
+                    self.tile_matrix[row][col] = None
+        self.score += temp_score
+
+    def dfs(self, row, col, connected):
+        # If the cell is outside the grid or already visited, return
+        if row < 0 or row >= self.grid_height or col < 0 or col >= self.grid_width or (row, col) in connected:
+            return
+        # If the cell is empty, return
+        if self.tile_matrix[row][col] is None:
+            return
+        # Mark the cell as connected
+        connected.add((row, col))
+        # Visit all adjacent cells
+        self.dfs(row + 1, col, connected)
+        self.dfs(row - 1, col, connected)
+        self.dfs(row, col + 1, connected)
+        self.dfs(row, col - 1, connected)

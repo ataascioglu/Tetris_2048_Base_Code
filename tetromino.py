@@ -206,34 +206,85 @@ class Tetromino:
         # if this method does not end by returning False before this line
         return True  # this tetromino can be moved in the given direction
 
+        # A method for rotating this tetromino by 90 degrees clockwise
 
-    def rotate_clockwise(self):
+    def rotate_cw(self, game_grid):
 
-        self.tile_matrix = np.transpose(self.tile_matrix)
-
-        self.tile_matrix = np.array([row[::-1] for row in self.tile_matrix])
-
-    def rotate_counter_clockwise(self):
-
-        self.tile_matrix = np.transpose(self.tile_matrix)
-
-        self.tile_matrix = np.array(self.tile_matrix[::-1])
-
-    def is_valid_position(self, grid):
         n = len(self.tile_matrix)
+
+        # create a new matrix to store the rotated tetromino
+        rotated_matrix = np.full((n, n), None)
+
+        # rotate the tetromino by 90 degrees clockwise
         for row in range(n):
             for col in range(n):
                 if self.tile_matrix[row][col] is not None:
-                    # Calculate the actual position on the grid
-                    grid_x = self.bottom_left_cell.x + col
-                    grid_y = self.bottom_left_cell.y + (n - row - 1)
+                    rotated_matrix[col][n - 1 - row] = cp.deepcopy(self.tile_matrix[row][col])
 
-                    # Check if the tile is outside the grid boundaries
-                    if grid_x < 0 or grid_x >= grid.grid_width or grid_y < 0 or grid_y >= grid.grid_height:
-                        return False  # Tile is out of the grid boundaries
+        # check if the rotated tetromino can be placed on the grid
+        if not self.can_be_placed(rotated_matrix, game_grid):
+            return False
 
-                    # Check if the grid cell is already occupied
-                    if grid.is_occupied(grid_y, grid_x):
-                        return False  # Tile overlaps with an existing tile on the grid
+        # update the tile matrix of this tetromino with the rotated matrix
+        self.tile_matrix = rotated_matrix
+        return True
+
+        # A method for checking if the rotated tetromino can be placed on the grid
+
+    def can_be_placed(self, rotated_matrix, game_grid):
+        n = len(rotated_matrix)
+
+        # check if the rotated tetromino can be placed on the grid
+        for row in range(n):
+            for col in range(n):
+                if rotated_matrix[row][col] is not None:
+                    position = self.get_cell_position(row, col)
+
+                    # check if the rotated tetromino is inside the grid
+                    if not game_grid.is_inside(position.y, position.x):
+                        return False
+
+                    # check if the rotated tetromino overlaps with any occupied cell
+                    if game_grid.is_occupied(position.y, position.x):
+                        return False
 
         return True
+
+        # A method for rotating this tetromino by 90 degrees counter clockwise
+
+    def rotate_ccw(self, game_grid):
+        n = len(self.tile_matrix)  # n = number of rows = number of columns
+        # create a new matrix to store the rotated tetromino
+        rotated_matrix = np.full((n, n), None)
+        # rotate the tetromino by 90 degrees clockwise
+        for row in range(n):
+            for col in range(n):
+                if self.tile_matrix[row][col] is not None:
+                    rotated_matrix[n - 1 - col][row] = cp.deepcopy(self.tile_matrix[row][col])
+        # check if the rotated tetromino can be placed on the grid
+        if not self.can_be_placed(rotated_matrix, game_grid):
+            return False
+        # update the tile matrix of this tetromino with the rotated matrix
+        self.tile_matrix = rotated_matrix
+        return True
+
+        # method for hard dropping the tetromino
+
+    def hard_drop(self, game_grid):
+        while self.move("down", game_grid):
+            pass
+
+    def get_highest_number(self):
+        # Initialize the highest number to 0
+        highest_number = 0
+
+        # Iterate over the tile_matrix
+        for row in self.tile_matrix:
+            for tile in row:
+                # If the tile is not None and its number is higher than the current highest number
+                if tile is not None and tile.number > highest_number:
+                    # Update the highest number
+                    highest_number = tile.number
+
+        # Return the highest number
+        return highest_number
